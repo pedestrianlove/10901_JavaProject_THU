@@ -2,14 +2,13 @@ import java.io.*;
 import org.apache.poi.xssf.usermodel.*;
 
 class FileIO {
-	public XSSFWorkbook Book;
-	public String Path;
+	public XSSFWorkbook Book = null;
+	public String Path = null;
 
+	// constructor
 	public FileIO () {
 		 Book = new XSSFWorkbook ();
-		 Path = null;
 	}
-
 	public FileIO (String fileName) throws IOException {
 		// verify fileName valid
 		if (fileName != null) {
@@ -20,15 +19,14 @@ class FileIO {
 				FileInputStream infile = new FileInputStream (excelFile);
 				Book = new XSSFWorkbook (infile);
 			}
-			else {
-				Path = null;
-			}
 		}
-		else {
-			Path = null;
+
+		if (Book == null) {
+			Book = new XSSFWorkbook ();
 		}
 	}
 
+	// public methods
 
 
 
