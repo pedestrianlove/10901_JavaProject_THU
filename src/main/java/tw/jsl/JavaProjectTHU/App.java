@@ -1,13 +1,27 @@
 package tw.jsl.JavaProjectTHU;
 
-/**
- * Hello world!
- *
- */
+// UI dependency
+import java.awt.EventQueue;
+
+
+
+// contains flow control
 public class App 
 {
-	public static void main( String[] args )
-	{
-		System.out.println( "Hello World!" );
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Interface window = new Interface();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 }
