@@ -30,33 +30,76 @@ import java.awt.SystemColor;
 import java.util.concurrent.ThreadLocalRandom;
 
 class Interface {
-	public String[][] data;
 	public JFrame frame;
-	public JLabel[][] label;
-	public JTextField textField;
-	public JButton[][] l;
-	public int BAD;
-
+	public JPanel panel_func, panel_cell;
+	public JTextField[][] textField;
+	public JButton[] l;
+	public FileIO excel;
+	public int ROW_SIZE = 100;
+	public int COL_SIZE = 100;
 	
 	
 	/**
 	 * Create the application.
 	 */
-	public Interface() {
+	public
+	Interface() {
+		msg ("Hello, User!");
 		initialize();
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
-		
-		
+	public void
+	initialize() {
+		// init frame
+		msg ("Initializing frame...");
 		frame = new JFrame();
 		frame.setBackground(Color.LIGHT_GRAY);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.getContentPane().setLayout(null);
-		frame.setBounds(100, 100, 530, 600);
+		frame.setBounds(100, 100, 100 + 600, 100 + 800);
+		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
+		
+		// init panels
+		msg ("Initializing panel_func...");
+		panel_func = new JPanel ();
+		panel_func.setBounds(0, 0, 600, 40);
+		frame.getContentPane().add(panel_func);
+		panel_func.setLayout(null);
+		
+		msg ("Initializing panel_cell...");
+		panel_cell = new JPanel ();
+		panel_cell.setBounds(0, 40, 600, 800);
+		frame.getContentPane().add(panel_cell);
+		panel_cell.setLayout(null);
+
+
+		// init textfields
+		msg ("Initializing textfields...");
+		JTextField currentTF;
+		//excel = new FileIO ();
+		//excel.openFile (null);
+		textField = new JTextField[ROW_SIZE][COL_SIZE];
+		for (int row = 0; row < ROW_SIZE; row++) {
+			for (int col = 0; col < COL_SIZE; col++) {
+				currentTF = new JTextField ();
+				currentTF.setBounds(row*50,col*50, 50, 50);
+				panel_cell.add (currentTF);
+				textField[row][col] = currentTF;
+
+			}
+		}
+
+
 	}
+	
+
+	private void
+	msg (String s) {
+		System.out.println (s);
+	}
+
 }

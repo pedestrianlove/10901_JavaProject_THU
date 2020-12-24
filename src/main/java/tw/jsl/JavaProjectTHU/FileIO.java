@@ -41,7 +41,7 @@ class FileIO {
 		if (Chooser == null) {
 			Chooser = new JFileChooser ();
 		}
-		FileNameExtensionFilter filter = new FileNameExtensionFilter ("xlsx");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter (null, "xlsx");
 		Chooser.setFileFilter (filter);
 		int returnVal = Chooser.showSaveDialog(null);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -52,7 +52,7 @@ class FileIO {
 	private void openFile_UI () {
 		// Select file and return File object from window
 		Chooser = new JFileChooser (); 
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("xlsx");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(null, "xlsx");
 		Chooser.setFileFilter (filter);
 		int returnVal = Chooser.showOpenDialog(null);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
