@@ -1,5 +1,9 @@
 package tw.jsl.JavaProjectTHU;
 
+// general
+import java.util.ArrayList;
+import java.util.Iterator;
+
 // objects
 import javax.swing.JFrame;
 import java.awt.TextField;
@@ -29,14 +33,16 @@ import java.awt.event.ActionEvent;
 import java.awt.SystemColor;
 import java.util.concurrent.ThreadLocalRandom;
 
+// POI
+//import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.ss.usermodel.*;
+
 class Interface {
 	public JFrame frame;
 	public JPanel panel_func, panel_cell;
-	public JTextField[][] textField;
+	public ArrayList<ArrayList<JTextField>> textField;
 	public JButton[] l;
 	public FileIO excel;
-	public int ROW_SIZE = 100;
-	public int COL_SIZE = 100;
 	
 	
 	/**
@@ -53,6 +59,10 @@ class Interface {
 	 */
 	public void
 	initialize() {
+		
+		// init book
+		init_book ();
+
 		// init frame
 		msg ("Initializing frame...");
 		frame = new JFrame();
@@ -63,39 +73,81 @@ class Interface {
 		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		
-		// init panels
+		// init panel_func (panel that stores function buttons)
 		msg ("Initializing panel_func...");
 		panel_func = new JPanel ();
 		panel_func.setBounds(0, 0, 600, 40);
 		frame.getContentPane().add(panel_func);
 		panel_func.setLayout(null);
-		
+	
+		// init panel_cell (panel that stores cell textfields)
 		msg ("Initializing panel_cell...");
 		panel_cell = new JPanel ();
 		panel_cell.setBounds(0, 40, 600, 800);
 		frame.getContentPane().add(panel_cell);
 		panel_cell.setLayout(null);
 
+		// init workbook
+		msg ("Initializing workbook...");
+		init_book ();
 
 		// init textfields
 		msg ("Initializing textfields...");
-		JTextField currentTF;
-		//excel = new FileIO ();
-		//excel.openFile (null);
-		textField = new JTextField[ROW_SIZE][COL_SIZE];
-		for (int row = 0; row < ROW_SIZE; row++) {
-			for (int col = 0; col < COL_SIZE; col++) {
-				currentTF = new JTextField ();
+
+		textField = new ArrayList<ArrayList<JTextField>> ();
+		Iterator<ArrayList<JTextField>> textField_row = textField.iterator ();
+		Iterator<Row> rowIterator = excel.Book.getSheetAt (0).iterator ();
+		int row = 0;
+		while (rowIterator.hasNext ()) {
+			Iterator<Cell> cellIterator = rowIterator.next ().cellIterator ();
+			ArrayList<JTextField> textField_col = new ArrayList<JTextField> ();
+			int col = 0;
+			while (cellIterator.hasNext ()) {
+				Cell cell = cellIterator.next ();
+				
+				// setup currentTF
+				JTextField currentTF = new JTextField ();
 				currentTF.setBounds(row*50,col*50, 50, 50);
 				panel_cell.add (currentTF);
-				textField[row][col] = currentTF;
+				switch (cell.getCellType ()) {
+					case NUMERIC:
+					currentTF.setText (cell.getNumericCellValue () + "t");
+					break;
 
+					case STRING:
+					currentTF.setText (cell.getStringCellValue () + "t");
+					break;
+					
+				}
+
+				// save and move on to the next one
+				textField_col.add (currentTF);
+				col ++;
 			}
+			textField.add (textField_col);
+			row ++;
 		}
 
 
 	}
-	
+
+
+
+	private void
+	refresh_file () {
+		System.out.println ("refreshing file...");
+	}	
+
+	private void
+	init_book () {
+		// init excel object and open a file with GUI
+		excel = new FileIO ();
+		String filename =
+			"/home/jsl/CODE/10901_JavaProject_THU/src/test/resources/realExcel.xlsx";
+		// need to change to null upon release FIXME
+		excel.openFile (filename);
+	}
+
 
 	private void
 	msg (String s) {

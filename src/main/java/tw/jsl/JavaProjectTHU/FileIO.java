@@ -75,6 +75,8 @@ class FileIO {
 					Book = new XSSFWorkbook (infile);
 				}
 				else {
+					System.out.println ("Failed to open from file...");
+					System.out.println ("I'm going to create a new one.");
 					excelFile = null;
 					Book = new XSSFWorkbook ();
 				}
