@@ -43,6 +43,7 @@ class Interface {
 	public ArrayList<ArrayList<JTextField>> textField;
 	public JButton[] l;
 	public FileIO excel;
+	public Cell cell;
 	
 	
 	/**
@@ -107,18 +108,31 @@ class Interface {
 				
 				// setup currentTF
 				JTextField currentTF = new JTextField ();
-				currentTF.setBounds(row*50,col*50, 50, 50);
+				currentTF.setBounds(col*100,row*50, 100, 50);
 				panel_cell.add (currentTF);
 				switch (cell.getCellType ()) {
 					case NUMERIC:
-					currentTF.setText (cell.getNumericCellValue () + "t");
+					currentTF.setText (cell.getNumericCellValue () + "");
 					break;
 
 					case STRING:
-					currentTF.setText (cell.getStringCellValue () + "t");
+					currentTF.setText (cell.getStringCellValue ());
 					break;
 					
 				}
+
+				//add event handler (BROKEN, FIXME)
+				currentTF.getDocument ()
+					.addDocummentListener (new DocumentListener () {
+					@Override
+					public void changedUpdate (DocumentEvent e) {
+						String data = currentTF.getText ();
+						// add different data handling FIXME
+						cell.setCellValue (data);
+						refresh_TF ();
+					}
+
+				});
 
 				// save and move on to the next one
 				textField_col.add (currentTF);
@@ -133,9 +147,35 @@ class Interface {
 
 
 
-	private void
-	refresh_file () {
-		System.out.println ("refreshing file...");
+	public void
+	refresh_TF () {
+		System.out.println ("Refreshing file...");
+		
+		Iterator<ArrayList<JTextField>> textField_row = textField.iterator ();
+		Iterator<Row> rowIterator = excel.Book.getSheetAt (0).iterator ();
+		while (rowIterator.hasNext ()) {
+			Iterator<Cell> cellIterator = rowIterator.next ().cellIterator ();
+			Iterator<JTextField> textField_col = textField_row.next ().iterator ();
+			while (cellIterator.hasNext ()) {
+				cell = cellIterator.next ();
+				currentTF = textField_col.next ();
+				
+				switch (cell.getCellType ()) {
+					case NUMERIC:
+					currentTF.setText (cell.getNumericCellValue () + "");
+					break;
+
+					case STRING:
+					currentTF.setText (cell.getStringCellValue ());
+					break;
+					
+				}
+
+
+			}
+		}
+
+
 	}	
 
 	private void
