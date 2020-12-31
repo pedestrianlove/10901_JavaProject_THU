@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // objects
+import java.awt.Container;
 import javax.swing.JFrame;
 import java.awt.TextField;
 import java.awt.BorderLayout;
@@ -18,6 +19,7 @@ import java.awt.Color;
 import javax.swing.SwingConstants;
 import javax.swing.JToggleButton;
 import java.awt.Button;
+import javax.swing.text.*;
 import javax.swing.JTextField;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.BoxLayout;
@@ -26,6 +28,7 @@ import javax.swing.GroupLayout.Alignment;
 
 // event
 import java.awt.EventQueue;
+import javax.swing.event.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -41,7 +44,7 @@ class Interface {
 	public JFrame frame;
 	public JPanel panel_func, panel_cell;
 	public ArrayList<ArrayList<JTextField>> textField;
-	public JButton[] l;
+	public JButton open, save, sync;
 	public FileIO excel;
 	public Cell cell;
 	
@@ -62,6 +65,7 @@ class Interface {
 	initialize() {
 		
 		// init book
+		msg ("Initializing workbook...");
 		init_book ();
 
 		// init frame
@@ -70,28 +74,43 @@ class Interface {
 		frame.setBackground(Color.LIGHT_GRAY);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.getContentPane().setLayout(null);
-		frame.setBounds(100, 100, 100 + 600, 100 + 800);
+		frame.setBounds(0, 0, 100 + 600, 100 + 800);
 		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		
 		// init panel_func (panel that stores function buttons)
 		msg ("Initializing panel_func...");
+	
 		panel_func = new JPanel ();
-		panel_func.setBounds(0, 0, 600, 40);
+		panel_func.setBounds(600, 0, 200, 900);
+		panel_func.setBackground(Color.BLUE);
 		frame.getContentPane().add(panel_func);
 		panel_func.setLayout(null);
+			// init buttons
+			open = new JButton ("Open");
+			//open.setBounds (600, 0, 100, 300);
+			open.setBackground (Color.YELLOW);
+			panel_func.add (open);
+
+			save = new JButton ("Save");
+			//save.setBounds (600, 300, 100, 300);
+			save.setBackground (Color.GREEN);
+			panel_func.add (save);
+
+			sync = new JButton ("Sync");
+			//sync.setBounds (600, 600, 100, 300);
+			sync.setBackground (Color.MAGENTA);
+			panel_func.add (sync);
 	
 		// init panel_cell (panel that stores cell textfields)
 		msg ("Initializing panel_cell...");
 		panel_cell = new JPanel ();
-		panel_cell.setBounds(0, 40, 600, 800);
+		panel_cell.setBounds(0, 0, 600, 100+ 800);
+		panel_cell.setBackground(Color.RED);
 		frame.getContentPane().add(panel_cell);
 		panel_cell.setLayout(null);
 
-		// init workbook
-		msg ("Initializing workbook...");
-		init_book ();
-
+		
 		// init textfields
 		msg ("Initializing textfields...");
 
@@ -108,8 +127,7 @@ class Interface {
 				
 				// setup currentTF
 				JTextField currentTF = new JTextField ();
-				currentTF.setBounds(col*100,row*50, 100, 50);
-				panel_cell.add (currentTF);
+				currentTF.setBounds(col*100, row*50, 100, 50);
 				switch (cell.getCellType ()) {
 					case NUMERIC:
 					currentTF.setText (cell.getNumericCellValue () + "");
@@ -120,19 +138,59 @@ class Interface {
 					break;
 					
 				}
+				panel_cell.add (currentTF);
 
 				//add event handler (BROKEN, FIXME)
+				/*
 				currentTF.getDocument ()
-					.addDocummentListener (new DocumentListener () {
+					.addDocumentListener (new DocumentListener () {
 					@Override
 					public void changedUpdate (DocumentEvent e) {
-						String data = currentTF.getText ();
+						//JTextField currentTF = (JTextField) e.getSource();
+						//String data = currentTF.getText ();
+						// add different data handling FIXME
+						Document doc = e.getDocument ();
+						String data = "";
+						try {
+							data = doc.getText (0, doc.getLength ());
+						} catch (BadLocationException ex) {
+							System.out.println ("Bad Location Error.");
+						}
+						cell.setCellValue (data);
+						refresh_TF ();
+					}
+					@Override
+					public void insertUpdate (DocumentEvent e) {
+						Document doc = e.getDocument ();
+						String data = "";
+						try {
+							data = doc.getText (0, doc.getLength ());
+						} catch (BadLocationException ex) {
+							System.out.println ("Bad Location Error.");
+						}
+						//JTextField currentTF = (JTextField) e.getSource();
+						//String data = currentTF.getText ();
 						// add different data handling FIXME
 						cell.setCellValue (data);
 						refresh_TF ();
 					}
-
+					@Override
+					public void removeUpdate (DocumentEvent e) {
+						Document doc = e.getDocument ();
+						String data = "";
+						try {
+							data = doc.getText (0, doc.getLength ());
+						} catch (BadLocationException ex) {
+							System.out.println ("Bad Location Error.");
+						}
+						//JTextField currentTF = (JTextField) e.getSource();
+						//String data = currentTF.getText ();
+						// add different data handling FIXME
+						cell.setCellValue (data);
+						refresh_TF ();
+					}
 				});
+				*/
 
 				// save and move on to the next one
 				textField_col.add (currentTF);
@@ -158,7 +216,7 @@ class Interface {
 			Iterator<JTextField> textField_col = textField_row.next ().iterator ();
 			while (cellIterator.hasNext ()) {
 				cell = cellIterator.next ();
-				currentTF = textField_col.next ();
+				JTextField currentTF = textField_col.next ();
 				
 				switch (cell.getCellType ()) {
 					case NUMERIC:
@@ -183,8 +241,9 @@ class Interface {
 		// init excel object and open a file with GUI
 		excel = new FileIO ();
 		String filename =
-			"/home/jsl/CODE/10901_JavaProject_THU/src/test/resources/realExcel.xlsx";
+			"src/test/resources/realExcel.xlsx";
 		// need to change to null upon release FIXME
+		msg ("Opening file from predesignated path...");
 		excel.openFile (filename);
 	}
 
