@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // objects
+import javax.swing.JScrollPane;
 import java.awt.Container;
 import javax.swing.JFrame;
 import java.awt.TextField;
@@ -25,6 +26,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.ScrollPaneConstants;
 
 // event
 import java.awt.EventQueue;
@@ -41,6 +43,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.poi.ss.usermodel.*;
 
 class Interface {
+	public boolean SAVED;
 	public JFrame frame;
 	public JPanel panel_func, panel_cell;
 	public ArrayList<ArrayList<JTextField>> textField;
@@ -73,6 +76,7 @@ class Interface {
 		msg ("Initializing frame...");
 		frame = new JFrame();
 		frame.setBackground(Color.LIGHT_GRAY);
+		frame.setContentPane (new JScrollPane (ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.getContentPane().setLayout(null);
 		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
@@ -126,11 +130,13 @@ class Interface {
 
 	public void
 	Adjust_Obj_Size () {
+		int height = 0;
+		int width = 0;
 		// Adjust the object size dynamically
-		int height = 0, width = 0;
-		panel_cell.setBounds(width, height, 600, 100 + 800);
-		width += max_col * 100;
-		height += max_row * 50;
+		
+		panel_cell.setBounds(width, height, max_col * 100, max_row * 50);
+		width = max_col * 100;
+		height = max_row * 50;
 		panel_func.setBounds(width, 0, 100, height);
 			open.setBounds (0, 0, 100, height / 2);
 			save.setBounds (0, height / 2, 100, height / 2);
@@ -141,6 +147,7 @@ class Interface {
 	public void
 	File_changed (DocumentEvent e) {
 		msg ("Detected file change, refreshing the file...");
+		SAVED = false;
 		Interface _interfaces = (Interface) e.getDocument ().getProperty ("interface");
 		JTextField _currentTF = (JTextField) e.getDocument ().getProperty ("currentTF");
 		Cell _cell = (Cell) e.getDocument ().getProperty ("cell");
@@ -155,13 +162,14 @@ class Interface {
 	Open_func () {
 		msg ("Opening file...");
 		excel.openFile (null);
-		
+		//refreshTF ();
 		msg ("Done.");
 	}
 
 	public void
 	Save_func () {
 		msg ("Saving file...");
+		SAVED = true;
 		excel.writeFile (null);
 		msg ("Done.");
 	}
