@@ -44,9 +44,10 @@ class Interface {
 	public JFrame frame;
 	public JPanel panel_func, panel_cell;
 	public ArrayList<ArrayList<JTextField>> textField;
-	public JButton open, save, sync;
+	public JButton open, save;
 	public FileIO excel;
 	public Cell cell;
+	public int max_row, max_col;
 	
 	
 	/**
@@ -74,7 +75,6 @@ class Interface {
 		frame.setBackground(Color.LIGHT_GRAY);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.getContentPane().setLayout(null);
-		frame.setBounds(0, 0, 100 + 600, 100 + 800);
 		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		
@@ -82,38 +82,99 @@ class Interface {
 		msg ("Initializing panel_func...");
 	
 		panel_func = new JPanel ();
-		panel_func.setBounds(600, 0, 200, 900);
 		panel_func.setBackground(Color.BLUE);
 		frame.getContentPane().add(panel_func);
 		panel_func.setLayout(null);
 			// init buttons
 			open = new JButton ("Open");
-			//open.setBounds (600, 0, 100, 300);
 			open.setBackground (Color.YELLOW);
+			open.addActionListener (new ActionListener () {
+				public void actionPerformed (ActionEvent e) {
+					msg ("----Open button clicked----");
+					Open_func ();
+				}		
+			});
 			panel_func.add (open);
 
 			save = new JButton ("Save");
-			//save.setBounds (600, 300, 100, 300);
 			save.setBackground (Color.GREEN);
+			save.addActionListener (new ActionListener () {
+				public void actionPerformed (ActionEvent e) {
+					msg ("----Save button clicked----");
+					Save_func ();
+				}		
+			});
 			panel_func.add (save);
-
-			sync = new JButton ("Sync");
-			//sync.setBounds (600, 600, 100, 300);
-			sync.setBackground (Color.MAGENTA);
-			panel_func.add (sync);
-	
+				
 		// init panel_cell (panel that stores cell textfields)
 		msg ("Initializing panel_cell...");
 		panel_cell = new JPanel ();
-		panel_cell.setBounds(0, 0, 600, 100+ 800);
 		panel_cell.setBackground(Color.RED);
 		frame.getContentPane().add(panel_cell);
 		panel_cell.setLayout(null);
 
 		
 		// init textfields
-		msg ("Initializing textfields...");
+		refresh_TF ();
 
+		// Adjust object size
+		Adjust_Obj_Size ();
+
+		
+	}
+
+
+	public void
+	Adjust_Obj_Size () {
+		// Adjust the object size dynamically
+		int height = 0, width = 0;
+		panel_cell.setBounds(width, height, 600, 100 + 800);
+		width += max_col * 100;
+		height += max_row * 50;
+		panel_func.setBounds(width, 0, 100, height);
+			open.setBounds (0, 0, 100, height / 2);
+			save.setBounds (0, height / 2, 100, height / 2);
+		width += 100;
+		frame.setBounds(0, 0, width, height);
+	}
+
+	public void
+	File_changed (DocumentEvent e) {
+		msg ("Detected file change, refreshing the file...");
+		Interface _interfaces = (Interface) e.getDocument ().getProperty ("interface");
+		JTextField _currentTF = (JTextField) e.getDocument ().getProperty ("currentTF");
+		Cell _cell = (Cell) e.getDocument ().getProperty ("cell");
+		String _data = _currentTF.getText ();
+		// add different data handling FIXME
+		_cell.setCellValue (_data);
+		_interfaces.refresh_TF ();
+
+	}
+
+	public void
+	Open_func () {
+		msg ("Opening file...");
+		excel.openFile (null);
+		
+		msg ("Done.");
+	}
+
+	public void
+	Save_func () {
+		msg ("Saving file...");
+		excel.writeFile (null);
+		msg ("Done.");
+	}
+
+
+
+
+	public void
+	refresh_TF () {
+		msg ("(Re)constructing textfields...");
+		
+		max_col = 0;
+		max_row = 0;
 		textField = new ArrayList<ArrayList<JTextField>> ();
 		Iterator<ArrayList<JTextField>> textField_row = textField.iterator ();
 		Iterator<Row> rowIterator = excel.Book.getSheetAt (0).iterator ();
@@ -140,100 +201,37 @@ class Interface {
 				}
 				panel_cell.add (currentTF);
 
-				//add event handler (BROKEN, FIXME)
-				/*
+				//add event handler
+				//// attach objects to the document
+				currentTF.getDocument ().putProperty ("cell", cell);
+				currentTF.getDocument ().putProperty ("currentTF", currentTF);
+				currentTF.getDocument ().putProperty ("interface", this);
+				//// find designated objects by tags
 				currentTF.getDocument ()
 					.addDocumentListener (new DocumentListener () {
 					@Override
 					public void changedUpdate (DocumentEvent e) {
-						//JTextField currentTF = (JTextField) e.getSource();
-						//String data = currentTF.getText ();
-						// add different data handling FIXME
-						Document doc = e.getDocument ();
-						String data = "";
-						try {
-							data = doc.getText (0, doc.getLength ());
-						} catch (BadLocationException ex) {
-							System.out.println ("Bad Location Error.");
-						}
-						cell.setCellValue (data);
-						refresh_TF ();
+						File_changed (e);
 					}
 					@Override
 					public void insertUpdate (DocumentEvent e) {
-						Document doc = e.getDocument ();
-						String data = "";
-						try {
-							data = doc.getText (0, doc.getLength ());
-						} catch (BadLocationException ex) {
-							System.out.println ("Bad Location Error.");
-						}
-						//JTextField currentTF = (JTextField) e.getSource();
-						//String data = currentTF.getText ();
-						// add different data handling FIXME
-						cell.setCellValue (data);
-						refresh_TF ();
+						File_changed (e);
 					}
 					@Override
 					public void removeUpdate (DocumentEvent e) {
-						Document doc = e.getDocument ();
-						String data = "";
-						try {
-							data = doc.getText (0, doc.getLength ());
-						} catch (BadLocationException ex) {
-							System.out.println ("Bad Location Error.");
-						}
-						//JTextField currentTF = (JTextField) e.getSource();
-						//String data = currentTF.getText ();
-						// add different data handling FIXME
-						cell.setCellValue (data);
-						refresh_TF ();
+						File_changed (e);
 					}
 				});
-				*/
 
 				// save and move on to the next one
 				textField_col.add (currentTF);
 				col ++;
 			}
+			if (max_col < col) max_col = col;
 			textField.add (textField_col);
 			row ++;
 		}
-
-
-	}
-
-
-
-	public void
-	refresh_TF () {
-		System.out.println ("Refreshing file...");
-		
-		Iterator<ArrayList<JTextField>> textField_row = textField.iterator ();
-		Iterator<Row> rowIterator = excel.Book.getSheetAt (0).iterator ();
-		while (rowIterator.hasNext ()) {
-			Iterator<Cell> cellIterator = rowIterator.next ().cellIterator ();
-			Iterator<JTextField> textField_col = textField_row.next ().iterator ();
-			while (cellIterator.hasNext ()) {
-				cell = cellIterator.next ();
-				JTextField currentTF = textField_col.next ();
-				
-				switch (cell.getCellType ()) {
-					case NUMERIC:
-					currentTF.setText (cell.getNumericCellValue () + "");
-					break;
-
-					case STRING:
-					currentTF.setText (cell.getStringCellValue ());
-					break;
-					
-				}
-
-
-			}
-		}
-
-
+		max_row = row;
 	}	
 
 	private void
@@ -248,7 +246,7 @@ class Interface {
 	}
 
 
-	private void
+	private static void
 	msg (String s) {
 		System.out.println (s);
 	}
