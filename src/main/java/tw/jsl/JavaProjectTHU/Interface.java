@@ -23,13 +23,17 @@ import javax.swing.JToggleButton;
 import java.awt.Button;
 import javax.swing.text.*;
 import javax.swing.JTextField;
+import javax.swing.JFormattedTextField;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.text.DefaultFormatter;
 
 // event
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.awt.EventQueue;
 import javax.swing.event.*;
 import java.awt.event.ActionListener;
@@ -48,7 +52,7 @@ class Interface {
 	public JFrame frame;
 	public JPanel panel_func, panel_cell;
 	public ArrayList<JLabel> cell_alpha, cell_number;
-	public ArrayList<ArrayList<JTextField>> textField;
+	public ArrayList<ArrayList<JFormattedTextField>> textField;
 	public JButton open, save, NEW;
 	public FileIO excel;
 	public Cell cell;
@@ -170,24 +174,29 @@ class Interface {
 	}
 
 	public void
-	File_changed (DocumentEvent e) {
+	File_changed (JFormattedTextField _currentTF, Interface _interfaces, Cell _cell) {
 		msg ("Detected file change, refreshing the file...");
 		SAVED = false;
-		Interface _interfaces = (Interface) e.getDocument ().getProperty ("interface");
-		JTextField _currentTF = (JTextField) e.getDocument ().getProperty ("currentTF");
-		Cell _cell = (Cell) e.getDocument ().getProperty ("cell");
-		String _data = _currentTF.getText ();
+		String _data = (String) _currentTF.getValue ();
 		// add different data handling
-		if (_data == "") {
+		if (_data == "" || _data == null) {
+			msg ("Detected empty string.");
 			_cell.setCellType (CellType.STRING);
 			_cell.setCellValue ("");
-		} else if (isInteger (_data)) {
+		} else if (isInteger (_data) == 1){
+			msg ("Detected integer.");
+			_cell.setCellType (CellType.NUMERIC);
+			_cell.setCellValue (Integer.parseInt (_data));
+		} else if (isInteger (_data) == 2) {
+			msg ("Detected float.");
 			_cell.setCellType (CellType.NUMERIC);
 			_cell.setCellValue (Float.parseFloat (_data));
-		} else if (_data.charAt (0) == '=' && _data.substring (_data.length () - 1) == "&") {
-			_cell.setCellType (CellType.FORMULA); // case FORMULA BROKEN FIXME
-			_cell.setCellFormula (_data.substring (1, _data.length () - 2));
+		} else if (_data.charAt (0) == '=') {
+			msg ("Detected formula.");
+			//_cell.setCellType (CellType.FORMULA); // case FORMULA BROKEN FIXME
+			_cell.setCellFormula (_data.substring (1));
 		} else {
+			msg ("Detected string.");
 			_cell.setCellType (CellType.STRING);
 			_cell.setCellValue (_data);
 		}
@@ -270,8 +279,6 @@ class Interface {
 				Cell cell = row.getCell (j);
 				if (cell == null || cell.getCellType () == CellType.BLANK)
 					cell = row.createCell (j, CellType.STRING);
-				//if (row.getRowNum () == 0)
-				//	cell.setCellValue ("NEW-COLUMN");
 			}
 		}
 		PADDED = true;
@@ -306,9 +313,9 @@ class Interface {
 		max_row = 0;
 		// ArrayLists
 		cell_number = new ArrayList<JLabel> ();
-		textField = new ArrayList<ArrayList<JTextField>> ();
+		textField = new ArrayList<ArrayList<JFormattedTextField>> ();
 		// Iterators
-		Iterator<ArrayList<JTextField>> textField_row = textField.iterator ();
+		Iterator<ArrayList<JFormattedTextField>> textField_row = textField.iterator ();
 		Iterator<Row> rowIterator = excel.Book.getSheetAt (0).iterator ();
 		int row = 0;
 		while (rowIterator.hasNext ()) {
@@ -323,11 +330,11 @@ class Interface {
 			// textfields
 			Row row_obj = rowIterator.next ();
 			Iterator<Cell> cellIterator = row_obj.cellIterator ();
-			ArrayList<JTextField> textField_col = new ArrayList<JTextField> ();
+			ArrayList<JFormattedTextField> textField_col = new ArrayList<JFormattedTextField> ();
 			int col = 0;
 			while (cellIterator.hasNext ()) {
 				// cells
-				Cell cell = cellIterator.next ();
+				final Cell cell = cellIterator.next ();
 				
 				// labels
 				JLabel alphaLabel = new JLabel (number_to_str (col), SwingConstants.CENTER);
@@ -338,23 +345,25 @@ class Interface {
 				panel_cell.add (alphaLabel);
 				
 				// setup currentTF
-				JTextField currentTF = new JTextField ();
+				final JFormattedTextField currentTF = new JFormattedTextField (new DefaultFormatter());
+				DataFormatter formatter = new DataFormatter ();
 				currentTF.setBounds(50 + col*100, 50 + row*50, 100, 50);
 				String data = "";
 				switch (cell.getCellType ()) {
 					case NUMERIC:
-					//currentTF.setText (cell.getNumericCellValue () + "");
-					data = cell.getNumericCellValue () + "";
+					data = formatter.formatCellValue (cell);
 					break;
 
 					case STRING:
-					//currentTF.setText (cell.getStringCellValue ());
-					data = cell.getStringCellValue ();
+					data = formatter.formatCellValue (cell);
 					break;
 
 					case FORMULA:
 					FormulaEvaluator eval 
 						= excel.Book.getCreationHelper().createFormulaEvaluator();
+					data = formatter.formatCellValue (cell, eval);
+					break;
+					/*
 					switch (eval.evaluateFormulaCell (cell)) {
 						case BOOLEAN:
 							data = cell.getBooleanCellValue ()+"";
@@ -364,10 +373,12 @@ class Interface {
 							break;
 						case STRING:
 							data = cell.getStringCellValue ();
+							break;
 					}
+					*/
 
 				}
-				currentTF.setText (data);
+				currentTF.setValue (data);
 				panel_cell.add (currentTF);
 
 				//add event handler
@@ -376,6 +387,7 @@ class Interface {
 				currentTF.getDocument ().putProperty ("currentTF", currentTF);
 				currentTF.getDocument ().putProperty ("interface", this);
 				//// find designated objects by tags
+				/*
 				currentTF.getDocument ()
 					.addDocumentListener (new DocumentListener () {
 					@Override
@@ -394,6 +406,17 @@ class Interface {
 						File_changed (e);
 					}
 				});
+				*/
+				currentTF.addPropertyChangeListener ("value", new PropertyChangeListener () {
+				@Override	
+				public void propertyChange (PropertyChangeEvent e) {
+					msg ("----Property changed----");
+					JFormattedTextField _currentTF = (JFormattedTextField) e.getSource ();
+					Cell _cell = (Cell) currentTF.getDocument ().getProperty ("cell");
+					Interface _interfaces = (Interface) currentTF.getDocument ().getProperty ("interface");
+					File_changed (_currentTF, _interfaces, _cell);
+
+				}});
 
 				// save and move on to the next one
 				textField_col.add (currentTF);
@@ -405,10 +428,12 @@ class Interface {
 			row ++;
 		}
 		max_row = row;
-		if (CONTENT_FILLED) Adjust_Obj_Size ();
+		//if (CONTENT_FILLED) Adjust_Obj_Size ();
+		Adjust_Obj_Size ();
 		CONTENT_FILLED = true;
 	}
 
+	
 	private void
 	init_book () {
 		// init excel object and open a file with GUI
@@ -421,15 +446,18 @@ class Interface {
 	}
 
 
-	private static boolean
+	// 1: integer, 2: float, 0: others
+	private static int
 	isInteger(String str) {
 		if(str == null || str.trim().isEmpty()) 
-			return false;
+			return 0;
 		for (int i = 0; i < str.length(); i++) 
-			if(!Character.isDigit(str.charAt(i))) 
+			if(!Character.isDigit(str.charAt(i))) {
 				if (str.charAt(i) != '.')
-					return false;
-		return true;
+					return 0;
+				return 2;
+			}
+		return 1;
 	}
 	private static void
 	msg (String s) {
