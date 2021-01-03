@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 // objects
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import java.awt.Container;
 import javax.swing.JFrame;
@@ -76,7 +77,9 @@ class Interface {
 		msg ("Initializing frame...");
 		frame = new JFrame();
 		frame.setBackground(Color.LIGHT_GRAY);
-		frame.setContentPane (new JScrollPane (ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));
+		frame.setContentPane (new JScrollPane (
+					ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
+					ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.getContentPane().setLayout(null);
 		//frame.setExtendedState  (JFrame.MAXIMIZED_BOTH);
@@ -117,12 +120,14 @@ class Interface {
 		frame.getContentPane().add(panel_cell);
 		panel_cell.setLayout(null);
 
+			// init field tags
+			
 		
-		// init textfields
-		refresh_TF ();
+			// init textfields
+			refresh_TF ();
 
-		// Adjust object size
-		Adjust_Obj_Size ();
+			// Adjust object size
+			Adjust_Obj_Size ();
 
 		
 	}
@@ -134,9 +139,9 @@ class Interface {
 		int width = 0;
 		// Adjust the object size dynamically
 		
-		panel_cell.setBounds(width, height, max_col * 100, max_row * 50);
-		width = max_col * 100;
-		height = max_row * 50;
+		panel_cell.setBounds(width, height, max_col * 100 + 50, max_row * 50 + 50);
+		width = max_col * 100 + 50;
+		height = max_row * 50 + 50;
 		panel_func.setBounds(width, 0, 100, height);
 			open.setBounds (0, 0, 100, height / 2);
 			save.setBounds (0, height / 2, 100, height / 2);
@@ -160,9 +165,23 @@ class Interface {
 
 	public void
 	Open_func () {
+		if (!SAVED) {
+			msg ("Checking if discard current changes...");
+			int confirmed = JOptionPane.showConfirmDialog (null,
+					"You will lost all unsaved progess, continue?",
+				       	"Quit?",
+					JOptionPane.YES_NO_OPTION);
+			if (confirmed != JOptionPane.YES_OPTION) {
+				msg ("User cancelled the operation.");
+				return;
+			}
+
+			msg ("YES.");
+		}
 		msg ("Opening file...");
 		excel.openFile (null);
-		//refreshTF ();
+		refresh_TF ();
+		SAVED = true;
 		msg ("Done.");
 	}
 
@@ -196,7 +215,7 @@ class Interface {
 				
 				// setup currentTF
 				JTextField currentTF = new JTextField ();
-				currentTF.setBounds(col*100, row*50, 100, 50);
+				currentTF.setBounds(50 + col*100, 50 + row*50, 100, 50);
 				switch (cell.getCellType ()) {
 					case NUMERIC:
 					currentTF.setText (cell.getNumericCellValue () + "");
@@ -219,14 +238,17 @@ class Interface {
 					.addDocumentListener (new DocumentListener () {
 					@Override
 					public void changedUpdate (DocumentEvent e) {
+						msg ("----FILE CHANGED----");
 						File_changed (e);
 					}
 					@Override
 					public void insertUpdate (DocumentEvent e) {
+						msg ("----FILE CHANGED----");
 						File_changed (e);
 					}
 					@Override
 					public void removeUpdate (DocumentEvent e) {
+						msg ("----FILE CHANGED----");
 						File_changed (e);
 					}
 				});

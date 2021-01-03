@@ -73,6 +73,7 @@ class FileIO {
 				if (excelFile.exists () && !excelFile.isDirectory ()) {
 					FileInputStream infile = new FileInputStream (excelFile);
 					Book = new XSSFWorkbook (infile);
+					infile.close ();
 				}
 				else {
 					System.out.println ("Failed to open from file...");
