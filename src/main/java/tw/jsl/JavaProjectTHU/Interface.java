@@ -82,7 +82,7 @@ class Interface {
 
 		// init frame
 		msg ("Initializing frame...");
-		frame = new JFrame();
+		frame = new JFrame("Final Project presented by s08351050 J.S.LI");
 		frame.setBackground(Color.LIGHT_GRAY);
 		frame.setContentPane (new JScrollPane (
 					ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
